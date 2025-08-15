@@ -263,6 +263,7 @@ CREATE TABLE IF NOT EXISTS event_logs (
 -- Insert default settings
 INSERT INTO settings (setting_key, setting_value, setting_type, description) VALUES
 ('refresh_interval', '15', 'integer', 'Server status refresh interval in seconds'),
+('rate_limit_requests', '60', 'integer', 'Max requests per minute per IP'),
 ('rate_limit_window', '60', 'integer', 'Rate limit window in seconds'),
 ('site_title', 'HyperAbyss ARK Cluster', 'string', 'Website title'),
 ('site_description', 'The ultimate ARK: Survival Ascended multiplayer experience', 'string', 'Website description'),
@@ -285,8 +286,8 @@ ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value);
 
 -- Initialize default analytics data
 INSERT INTO player_analytics (
-    unique_players_all_time, 
-    peak_concurrent_players, 
+    unique_players_all_time,
+    peak_concurrent_players,
     peak_concurrent_date,
     daily_unique_players,
     weekly_unique_players,
@@ -295,8 +296,8 @@ INSERT INTO player_analytics (
     last_weekly_reset,
     last_monthly_reset
 ) VALUES (
-    0, 
-    0, 
+    0,
+    0,
     NOW(),
     0,
     0,
@@ -307,8 +308,8 @@ INSERT INTO player_analytics (
 ) ON DUPLICATE KEY UPDATE id = id;
 
 -- Initialize Discord stats
-INSERT INTO discord_stats (member_count, online_count, voice_channels) 
-VALUES (500, 50, 5) 
+INSERT INTO discord_stats (member_count, online_count, voice_channels)
+VALUES (500, 50, 5)
 ON DUPLICATE KEY UPDATE id = id;
 
 -- Insert sample server data (based on your .env)
@@ -318,7 +319,7 @@ INSERT INTO servers (server_key, name, description, ip, port, query_port, rcon_p
 ('thecenter', 'Cluster [HyperAbyss] The Center PvP/3X/ORP/8Man', 'Explore the unique underground world and floating islands of The Center with our community.', '198.23.225.136', 7781, 27022, 27022, 'TheCenter_WP', 100, 3, FALSE),
 ('forglar', 'Cluster [HyperAbyss] Forglar [ENDGAME]', 'End-game content server for experienced players with advanced progression and challenges.', '198.23.225.136', 7793, 27029, 27029, 'Forglar_WP', 75, 4, TRUE),
 ('svartalfheim', 'Cluster [HyperAbyss] Svartalfheim [ENDGAME]', 'Norse mythology-inspired endgame server with unique creatures and challenging environments.', '198.23.225.136', 7797, 27031, 27031, 'Svartalfheim_WP', 75, 5, FALSE)
-ON DUPLICATE KEY UPDATE 
+ON DUPLICATE KEY UPDATE
     name = VALUES(name),
     description = VALUES(description),
     ip = VALUES(ip),
@@ -334,50 +335,42 @@ INSERT INTO shop_categories (name, description, icon, sort_order) VALUES
 ('Tamed Creatures', 'Pre-tamed creatures and breeding pairs', 'fas fa-dragon', 3),
 ('Building Materials', 'Advanced building materials and structures', 'fas fa-cubes', 4),
 ('Resource Packs', 'Starter packs and resource bundles', 'fas fa-box', 5)
-ON DUPLICATE KEY UPDATE 
+ON DUPLICATE KEY UPDATE
     name = VALUES(name),
     description = VALUES(description);
 
 -- Insert sample news articles
 INSERT INTO news (title, content, excerpt, author, is_published, is_featured, published_at) VALUES
 ('Welcome to HyperAbyss ARK Cluster!', 'Welcome to the official launch of HyperAbyss ARK Cluster! We are excited to provide you with the ultimate ARK: Survival Ascended experience. Our servers feature balanced 3X rates, offline raid protection, and a thriving community of survival enthusiasts.
-
 Our cluster includes multiple maps including Ragnarok, The Island, The Center, and exclusive endgame content on Forglar and Svartalfheim. Each server is professionally managed with 24/7 admin support and regular community events.
-
 Join our Discord community to connect with other players, participate in events, and get real-time server updates. Your survival adventure starts here!', 'Welcome to the official launch of HyperAbyss ARK Cluster! Experience balanced gameplay with professional management and an amazing community.', 'HyperAbyss Team', TRUE, TRUE, NOW()),
-
 ('Weekly Community Events Schedule', 'We are excited to announce our weekly community events schedule! Every week, we will be hosting various events to bring our community together and provide exciting challenges with amazing rewards.
-
 **Monday**: Boss Fight Mondays - Community boss fights with shared loot
 **Wednesday**: Building Competitions - Show off your creativity
 **Friday**: PvP Tournaments - Structured PvP with prizes
 **Saturday**: Treasure Hunts - Server-wide treasure hunting events
 **Sunday**: Community Meetings - Voice chat discussions and feedback
-
 All events will be announced in our Discord server with full details and prize information. We look forward to seeing you there!', 'Join our weekly community events! Boss fights, building competitions, PvP tournaments, and more with amazing rewards.', 'Event Team', TRUE, FALSE, DATE_SUB(NOW(), INTERVAL 5 DAY)),
-
 ('Enhanced Offline Raid Protection Now Live', 'Our new and improved Offline Raid Protection (ORP) system is now active across all servers! This system has been designed to provide fair protection while maintaining the competitive PvP experience that makes ARK exciting.
-
 **How it works:**
 - ORP activates 15 minutes after all tribe members log off
 - Structures receive 90% damage reduction when protected
 - PvP is still possible when players are online
 - Special events may temporarily disable ORP with advance notice
-
 The system has been extensively tested and provides the perfect balance between protection and gameplay. Your feedback has been invaluable in creating this system, and we will continue to monitor and adjust as needed.', 'Our enhanced ORP system ensures fair gameplay while maintaining competitive PvP. 90% damage reduction when offline with balanced mechanics.', 'Admin Team', TRUE, FALSE, DATE_SUB(NOW(), INTERVAL 10 DAY))
-ON DUPLICATE KEY UPDATE 
+ON DUPLICATE KEY UPDATE
     title = VALUES(title),
     content = VALUES(content);
 
--- Create indexes for better performance
-CREATE INDEX IF NOT EXISTS idx_players_composite ON players(server_key, is_online, last_seen);
-CREATE INDEX IF NOT EXISTS idx_api_log_composite ON api_request_log(endpoint, timestamp, status_code);
-CREATE INDEX IF NOT EXISTS idx_uptime_history_composite ON server_uptime_history(server_key, date, uptime_percentage);
-CREATE INDEX IF NOT EXISTS idx_player_analytics_updated ON player_analytics(last_updated);
+-- Create indexes for better performance (MySQL compatible)
+ALTER TABLE players ADD INDEX idx_players_composite (server_key, is_online, last_seen);
+ALTER TABLE api_request_log ADD INDEX idx_api_log_composite (endpoint, timestamp, status_code);
+ALTER TABLE server_uptime_history ADD INDEX idx_uptime_history_composite (server_key, date, uptime_percentage);
+ALTER TABLE player_analytics ADD INDEX idx_player_analytics_updated (last_updated);
 
 -- Create views for common queries
 CREATE OR REPLACE VIEW v_server_summary AS
-SELECT 
+SELECT
     s.server_key,
     s.name,
     s.description,
@@ -396,46 +389,46 @@ WHERE s.is_active = 1
 ORDER BY s.server_order;
 
 CREATE OR REPLACE VIEW v_player_statistics AS
-SELECT 
+SELECT
     server_key,
     COUNT(*) as total_unique_players,
     COUNT(CASE WHEN is_online = 1 THEN 1 END) as players_online,
     AVG(total_playtime) as avg_playtime,
     MAX(last_seen) as last_activity
-FROM players 
+FROM players
 GROUP BY server_key;
 
 -- Create stored procedures for common operations
 DELIMITER //
 
-CREATE OR REPLACE PROCEDURE UpdatePlayerAnalytics()
+CREATE PROCEDURE UpdatePlayerAnalytics()
 BEGIN
     DECLARE total_unique INT DEFAULT 0;
     DECLARE peak_concurrent INT DEFAULT 0;
     DECLARE current_online INT DEFAULT 0;
-    
+
     -- Get total unique players
     SELECT COUNT(DISTINCT eos_id) INTO total_unique FROM unique_player_tracking;
-    
+
     -- Get current online players
     SELECT SUM(players_online) INTO current_online FROM server_status WHERE status = 'online';
-    
+
     -- Get peak concurrent from history
     SELECT COALESCE(MAX(total_players), 0) INTO peak_concurrent FROM concurrent_player_history;
-    
+
     -- Check if current online is new peak
     IF current_online > peak_concurrent THEN
         SET peak_concurrent = current_online;
-        
+
         -- Insert new peak record
-        INSERT INTO concurrent_player_history (timestamp, total_players, server_breakdown) 
+        INSERT INTO concurrent_player_history (timestamp, total_players, server_breakdown)
         VALUES (NOW(), current_online, JSON_OBJECT());
     END IF;
-    
+
     -- Update analytics table
     INSERT INTO player_analytics (
-        unique_players_all_time, 
-        peak_concurrent_players, 
+        unique_players_all_time,
+        peak_concurrent_players,
         peak_concurrent_date,
         last_updated
     ) VALUES (
@@ -448,29 +441,29 @@ BEGIN
         peak_concurrent_players = VALUES(peak_concurrent_players),
         peak_concurrent_date = VALUES(peak_concurrent_date),
         last_updated = VALUES(last_updated);
-        
+
 END //
 
-CREATE OR REPLACE PROCEDURE CleanupOldData()
+CREATE PROCEDURE CleanupOldData()
 BEGIN
     -- Clean old API logs (keep 30 days)
     DELETE FROM api_request_log WHERE timestamp < DATE_SUB(NOW(), INTERVAL 30 DAY);
-    
+
     -- Clean old rate limit entries (keep 7 days)
     DELETE FROM rate_limits WHERE window_start < DATE_SUB(NOW(), INTERVAL 7 DAY);
-    
+
     -- Clean old concurrent player history (keep 90 days)
     DELETE FROM concurrent_player_history WHERE timestamp < DATE_SUB(NOW(), INTERVAL 90 DAY);
-    
+
     -- Clean old event logs (keep 60 days)
     DELETE FROM event_logs WHERE timestamp < DATE_SUB(NOW(), INTERVAL 60 DAY);
-    
+
     -- Clean old performance metrics (keep 30 days)
     DELETE FROM performance_metrics WHERE timestamp < DATE_SUB(NOW(), INTERVAL 30 DAY);
-    
+
     -- Clean expired sessions
     DELETE FROM user_sessions WHERE expires_at < NOW();
-    
+
 END //
 
 DELIMITER ;
@@ -481,5 +474,4 @@ DELIMITER ;
 -- GRANT EXECUTE ON PROCEDURE hyperabyss_cluster.CleanupOldData TO 'hyperabyss_user'@'localhost';
 
 -- Final setup complete message
-SELECT 'HyperAbyss database schema installation complete!' as message;requests', '60', 'integer', 'Max requests per minute per IP'),
-('rate_limit_
+SELECT 'HyperAbyss database schema installation complete!' as message;
