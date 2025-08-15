@@ -1,0 +1,307 @@
+/* Homepage Specific Styles */
+
+/* Hero Section Enhancements */
+.page-home .hero {
+    background: radial-gradient(ellipse at center bottom, rgba(33, 150, 243, 0.1) 0%, transparent 70%);
+}
+
+.page-home .hero-stats {
+    animation-delay: 0.5s;
+}
+
+.page-home .hero-stats .stat-card:nth-child(1) { animation-delay: 0.6s; }
+.page-home .hero-stats .stat-card:nth-child(2) { animation-delay: 0.7s; }
+.page-home .hero-stats .stat-card:nth-child(3) { animation-delay: 0.8s; }
+.page-home .hero-stats .stat-card:nth-child(4) { animation-delay: 0.9s; }
+
+/* Features Section */
+.page-home .features {
+    background: linear-gradient(135deg, transparent 0%, rgba(22, 33, 62, 0.3) 50%, transparent 100%);
+}
+
+.page-home .features-grid .feature-card:nth-child(1) { animation-delay: 0.1s; }
+.page-home .features-grid .feature-card:nth-child(2) { animation-delay: 0.2s; }
+.page-home .features-grid .feature-card:nth-child(3) { animation-delay: 0.3s; }
+.page-home .features-grid .feature-card:nth-child(4) { animation-delay: 0.4s; }
+.page-home .features-grid .feature-card:nth-child(5) { animation-delay: 0.5s; }
+.page-home .features-grid .feature-card:nth-child(6) { animation-delay: 0.6s; }
+
+/* Discord Section Enhancements */
+.page-home .discord-section {
+    position: relative;
+    overflow: hidden;
+}
+
+.page-home .discord-section::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: -10%;
+    width: 40%;
+    height: 100%;
+    background: radial-gradient(ellipse at center, rgba(88, 101, 242, 0.1) 0%, transparent 70%);
+    z-index: 1;
+}
+
+.page-home .discord-widget {
+    box-shadow: 0 25px 50px rgba(88, 101, 242, 0.2);
+}
+
+/* Servers Section */
+.page-home .servers {
+    background: linear-gradient(45deg, transparent 0%, rgba(16, 33, 62, 0.2) 50%, transparent 100%);
+}
+
+.page-home .servers-showcase {
+    opacity: 0;
+    animation: fadeInUp 0.6s ease-out 1s forwards;
+}
+
+/* News Section */
+.page-home .news {
+    background: rgba(10, 10, 10, 0.3);
+}
+
+.page-home .news-grid .news-card:nth-child(1) { animation-delay: 0.1s; }
+.page-home .news-grid .news-card:nth-child(2) { animation-delay: 0.2s; }
+.page-home .news-grid .news-card:nth-child(3) { animation-delay: 0.3s; }
+
+/* Interactive Elements */
+.page-home .stat-card {
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+}
+
+.page-home .stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(45deg, transparent, rgba(33, 150, 243, 0.1), transparent);
+    transition: left 0.6s ease;
+}
+
+.page-home .stat-card:hover::before {
+    left: 100%;
+}
+
+/* Live Stats Animation */
+.page-home .stat-number[id*="live"] {
+    position: relative;
+}
+
+.page-home .stat-number[id*="live"]::after {
+    content: '';
+    position: absolute;
+    top: -2px;
+    right: -8px;
+    width: 6px;
+    height: 6px;
+    background: var(--status-online);
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+}
+
+/* Feature Icons Animation */
+.page-home .feature-icon {
+    position: relative;
+    overflow: hidden;
+}
+
+.page-home .feature-icon::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(circle at center, rgba(255,255,255,0.2) 0%, transparent 70%);
+    opacity: 0;
+    transition: opacity var(--transition-normal);
+}
+
+.page-home .feature-card:hover .feature-icon::before {
+    opacity: 1;
+}
+
+/* Server Cards Loading Animation */
+.page-home .servers-showcase.loading::after {
+    animation: pulse 1.5s infinite;
+}
+
+/* Parallax Effect for Background */
+.page-home .section:nth-child(even) {
+    background-attachment: fixed;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+}
+
+/* Call-to-Action Buttons */
+.page-home .btn-primary {
+    background: linear-gradient(45deg, var(--primary-blue), var(--primary-blue-dark));
+    box-shadow: 0 8px 25px rgba(33, 150, 243, 0.4);
+    position: relative;
+    overflow: hidden;
+}
+
+.page-home .btn-primary::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    transition: all 0.5s ease;
+}
+
+.page-home .btn-primary:hover::after {
+    width: 300px;
+    height: 300px;
+}
+
+/* Enhanced Hover Effects */
+.page-home .feature-card:hover {
+    box-shadow: 0 25px 50px rgba(33, 150, 243, 0.3);
+    border-color: var(--primary-blue);
+}
+
+.page-home .feature-card:hover .feature-icon {
+    transform: scale(1.1);
+    box-shadow: 0 15px 35px rgba(33, 150, 243, 0.6);
+}
+
+/* Section Transitions */
+.page-home .section {
+    transition: all var(--transition-slow);
+}
+
+.page-home .section:hover {
+    transform: translateY(-2px);
+}
+
+/* Discord Widget Enhancements */
+.page-home .discord-widget:hover {
+    transform: scale(1.02);
+    box-shadow: 0 30px 60px rgba(88, 101, 242, 0.3);
+}
+
+.page-home .discord-logo:hover {
+    transform: rotate(5deg) scale(1.05);
+}
+
+/* News Card Enhancements */
+.page-home .news-card:hover .news-image {
+    transform: scale(1.05);
+}
+
+.page-home .news-image {
+    transition: transform var(--transition-normal);
+    overflow: hidden;
+}
+
+/* Responsive Enhancements */
+@media (max-width: 1200px) {
+    .page-home .hero-title {
+        font-size: clamp(2rem, 7vw, 4rem);
+    }
+    
+    .page-home .discord-section::after {
+        display: none;
+    }
+}
+
+@media (max-width: 768px) {
+    .page-home .hero {
+        min-height: 80vh;
+        padding: var(--spacing-md);
+    }
+    
+    .page-home .hero-logo {
+        width: 80px;
+        height: 80px;
+        font-size: 2rem;
+    }
+    
+    .page-home .section {
+        padding: var(--spacing-xl) 0;
+    }
+    
+    .page-home .discord-text h2::before {
+        font-size: 2rem;
+    }
+    
+    .page-home .feature-icon {
+        width: 60px;
+        height: 60px;
+        font-size: 1.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .page-home .hero-actions {
+        width: 100%;
+    }
+    
+    .page-home .btn {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .page-home .discord-stats {
+        grid-template-columns: 1fr;
+        gap: var(--spacing-sm);
+    }
+}
+
+/* Performance Optimizations */
+.page-home .feature-card,
+.page-home .news-card,
+.page-home .stat-card {
+    will-change: transform;
+}
+
+/* Dark Mode Specific */
+@media (prefers-color-scheme: dark) {
+    .page-home {
+        --bg-overlay: rgba(0, 0, 0, 0.2);
+    }
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+    .page-home .hero-logo,
+    .page-home .stat-card::before,
+    .page-home .feature-icon::before,
+    .page-home .discord-logo {
+        animation: none;
+    }
+    
+    .page-home .btn-primary::after {
+        transition: none;
+    }
+    
+    .page-home *:hover {
+        transform: none !important;
+    }
+}
+
+/* High Contrast Mode */
+@media (prefers-contrast: high) {
+    .page-home .stat-card,
+    .page-home .feature-card,
+    .page-home .discord-widget,
+    .page-home .news-card {
+        border: 2px solid var(--text-primary);
+    }
+    
+    .page-home .btn {
+        border: 2px solid currentColor;
+    }
+}

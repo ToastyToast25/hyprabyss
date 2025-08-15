@@ -1,0 +1,166 @@
+{
+  "servers": [
+    {
+      "key": "ragnarok",
+      "name": "Cluster [HyperAbyss] Ragnarok PvP/3X/ORP/8Man",
+      "description": "Our flagship server featuring the massive Ragnarok map with balanced PvP, offline raid protection, and active tribal warfare.",
+      "ip": "198.23.225.136",
+      "port": 7795,
+      "query_port": 27028,
+      "rcon_port": 27028,
+      "rcon_password_env": "RAGNAROK_RCON_PASSWORD",
+      "map": "Ragnarok_WP",
+      "max_players": 150,
+      "rates": {
+        "gathering": 3,
+        "taming": 3,
+        "breeding": 3,
+        "experience": 3
+      },
+      "features": [
+        "3X Rates",
+        "ORP",
+        "8-Man Tribes",
+        "150 Slots"
+      ],
+      "order": 1,
+      "is_active": true,
+      "is_featured": true
+    },
+    {
+      "key": "theisland",
+      "name": "Cluster [HyperAbyss] The Island PvP/3X/ORP/8Man",
+      "description": "Experience ARK the way it was meant to be played on the original map with enhanced rates and quality of life improvements.",
+      "ip": "198.23.225.136",
+      "port": 7777,
+      "query_port": 27015,
+      "rcon_port": 27020,
+      "rcon_password_env": "THEISLAND_RCON_PASSWORD",
+      "map": "TheIsland_WP",
+      "max_players": 100,
+      "rates": {
+        "gathering": 3,
+        "taming": 3,
+        "breeding": 3,
+        "experience": 3
+      },
+      "features": [
+        "3X Rates",
+        "PvPvE",
+        "Classic Rules",
+        "100 Slots"
+      ],
+      "order": 2,
+      "is_active": true,
+      "is_featured": false
+    },
+    {
+      "key": "thecenter",
+      "name": "Cluster [HyperAbyss] The Center PvP/3X/ORP/8Man",
+      "description": "Explore the unique underground world and floating islands of The Center with our community.",
+      "ip": "198.23.225.136",
+      "port": 7781,
+      "query_port": 27022,
+      "rcon_port": 27022,
+      "rcon_password_env": "THECENTER_RCON_PASSWORD",
+      "map": "TheCenter_WP",
+      "max_players": 100,
+      "rates": {
+        "gathering": 3,
+        "taming": 3,
+        "breeding": 3,
+        "experience": 3
+      },
+      "features": [
+        "3X Rates",
+        "PvP",
+        "Underground Caves",
+        "100 Slots"
+      ],
+      "order": 3,
+      "is_active": true,
+      "is_featured": false
+    },
+    {
+      "key": "forglar",
+      "name": "Cluster [HyperAbyss] Forglar [ENDGAME]",
+      "description": "End-game content server for experienced players with advanced progression and challenges.",
+      "ip": "198.23.225.136",
+      "port": 7793,
+      "query_port": 27029,
+      "rcon_port": 27029,
+      "rcon_password_env": "FORGLAR_RCON_PASSWORD",
+      "map": "Forglar_WP",
+      "max_players": 75,
+      "rates": {
+        "gathering": 5,
+        "taming": 5,
+        "breeding": 5,
+        "experience": 5
+      },
+      "features": [
+        "5X Rates",
+        "Endgame",
+        "Advanced Bosses",
+        "75 Slots"
+      ],
+      "order": 4,
+      "is_active": true,
+      "is_featured": true
+    },
+    {
+      "key": "svartalfheim",
+      "name": "Cluster [HyperAbyss] Svartalfheim [ENDGAME]",
+      "description": "Norse mythology-inspired endgame server with unique creatures and challenging environments.",
+      "ip": "198.23.225.136",
+      "port": 7797,
+      "query_port": 27031,
+      "rcon_port": 27031,
+      "rcon_password_env": "SVARTALFHEIM_RCON_PASSWORD",
+      "map": "Svartalfheim_WP",
+      "max_players": 75,
+      "rates": {
+        "gathering": 5,
+        "taming": 5,
+        "breeding": 5,
+        "experience": 5
+      },
+      "features": [
+        "5X Rates",
+        "Norse Theme",
+        "Unique Creatures",
+        "75 Slots"
+      ],
+      "order": 5,
+      "is_active": true,
+      "is_featured": false
+    }
+  ],
+  "cluster_settings": {
+    "name": "HyperAbyss ARK Cluster",
+    "discord_invite": "https://discord.gg/hyperabyss",
+    "website": "https://hyperabyss.com",
+    "rules_url": "/rules",
+    "shop_url": "/shop",
+    "global_rates": {
+      "standard_gathering": 3,
+      "standard_taming": 3,
+      "standard_breeding": 3,
+      "standard_experience": 3
+    },
+    "global_features": [
+      "Cross-ARK Transfers",
+      "Offline Raid Protection",
+      "Professional Management",
+      "24/7 Support",
+      "Regular Events",
+      "Active Community"
+    ],
+    "maintenance_window": {
+      "day": "Sunday",
+      "time": "04:00",
+      "timezone": "EST",
+      "duration_minutes": 60
+    }
+  }
+}
