@@ -8,7 +8,6 @@ const HomepageComponent = {
     refreshInterval: null,
     
     init() {
-        // Only initialize on homepage
         if (!document.body.classList.contains('page-home')) {
             return;
         }
@@ -38,7 +37,6 @@ const HomepageComponent = {
     },
     
     bindEvents() {
-        // CTA button interactions
         this.elements.ctaButtons.forEach(button => {
             button.addEventListener('click', (e) => {
                 this.trackButtonClick(button);
@@ -46,19 +44,16 @@ const HomepageComponent = {
             });
         });
         
-        // Feature card interactions
         this.elements.featureCards.forEach((card, index) => {
             card.addEventListener('click', () => {
                 this.showFeatureDetails(index);
             });
             
-            // Add hover sound effect (optional)
             card.addEventListener('mouseenter', () => {
                 this.playHoverSound();
             });
         });
         
-        // News card interactions
         this.elements.newsCards.forEach(card => {
             card.addEventListener('click', (e) => {
                 if (!e.target.closest('a')) {
@@ -70,7 +65,6 @@ const HomepageComponent = {
             });
         });
         
-        // Keyboard navigation for cards
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' || e.key === ' ') {
                 const focusedCard = document.activeElement.closest('.feature-card, .news-card');
@@ -81,7 +75,6 @@ const HomepageComponent = {
             }
         });
         
-        // Intersection observer for advanced animations
         this.setupAdvancedAnimations();
     },
     
@@ -109,7 +102,7 @@ const HomepageComponent = {
         const showcase = this.elements.serversShowcase;
         if (!showcase) return;
         
-        const serverEntries = Object.entries(servers).slice(0, 2); // Show first 2 servers
+        const serverEntries = Object.entries(servers).slice(0, 2);
         
         if (serverEntries.length === 0) {
             showcase.innerHTML = '<div class="no-servers">No servers available</div>';
@@ -158,7 +151,6 @@ const HomepageComponent = {
         
         showcase.innerHTML = serverCards;
         
-        // Trigger animations
         setTimeout(() => {
             showcase.querySelectorAll('.animate-fade-in').forEach((card, index) => {
                 setTimeout(() => {
@@ -206,17 +198,14 @@ const HomepageComponent = {
                 window.HyperAbyss.utils.apiRequest('discord')
             ]);
             
-            // Update live player count
             if (serversData?.data?.meta?.total_players !== undefined) {
                 this.updateLivePlayerCount(serversData.data.meta.total_players);
             }
             
-            // Update Discord stats
             if (discordData?.data?.discord) {
                 this.updateDiscordStats(discordData.data.discord);
             }
             
-            // Emit stats update event
             window.HyperAbyss.utils.emit('homepage-stats-updated', {
                 servers: serversData?.data,
                 analytics: analyticsData?.data,
@@ -234,7 +223,6 @@ const HomepageComponent = {
         
         window.HyperAbyss.utils.animateNumber(element, count);
         
-        // Add pulse effect for changes
         element.classList.add('stat-updated');
         setTimeout(() => {
             element.classList.remove('stat-updated');
@@ -258,15 +246,12 @@ const HomepageComponent = {
     },
     
     startAutoRefresh() {
-        // Initial load
         this.updateLiveStats();
         
-        // Update every 30 seconds
         this.refreshInterval = setInterval(() => {
             this.updateLiveStats();
         }, 30000);
         
-        // Update when page becomes visible
         document.addEventListener('visibilitychange', () => {
             if (!document.hidden) {
                 this.updateLiveStats();
@@ -280,7 +265,6 @@ const HomepageComponent = {
                 if (entry.isIntersecting) {
                     const element = entry.target;
                     
-                    // Different animation types based on class
                     if (element.classList.contains('hero-stats')) {
                         this.animateHeroStats(element);
                     } else if (element.classList.contains('feature-card')) {
@@ -295,7 +279,6 @@ const HomepageComponent = {
             rootMargin: '0px 0px -100px 0px'
         });
         
-        // Observe elements for advanced animations
         document.querySelectorAll('.hero-stats, .feature-card, .discord-widget').forEach(el => {
             observer.observe(el);
         });
@@ -336,7 +319,6 @@ const HomepageComponent = {
             timestamp: Date.now()
         });
         
-        // Analytics tracking
         if (typeof gtag !== 'undefined') {
             gtag('event', 'click', {
                 event_category: 'cta',
@@ -376,11 +358,9 @@ const HomepageComponent = {
         const feature = features[index];
         if (!feature) return;
         
-        // Create modal or tooltip with feature details
         const modal = this.createFeatureModal(feature);
         document.body.appendChild(modal);
         
-        // Show modal
         setTimeout(() => {
             modal.classList.add('active');
         }, 10);
@@ -403,7 +383,6 @@ const HomepageComponent = {
             </div>
         `;
         
-        // Close on backdrop click
         modal.addEventListener('click', (e) => {
             if (e.target === modal) {
                 modal.remove();
@@ -414,12 +393,9 @@ const HomepageComponent = {
     },
     
     playHoverSound() {
-        // Optional: Add subtle hover sound effect
-        // Only if user has enabled sound effects
         const soundEnabled = window.HyperAbyss.utils.storage.get('sound-effects') !== false;
         if (!soundEnabled) return;
         
-        // Create audio context for subtle UI sounds
         try {
             const audioContext = new (window.AudioContext || window.webkitAudioContext)();
             const oscillator = audioContext.createOscillator();
@@ -450,12 +426,10 @@ const HomepageComponent = {
     }
 };
 
-// Register component
 window.HyperAbyss.utils.registerComponent('homepage', HomepageComponent);
 
-// Add custom CSS for homepage animations
-const style = document.createElement('style');
-style.textContent = `
+const homepageStyle = document.createElement('style');
+homepageStyle.textContent = `
     .stat-updated {
         animation: statPulse 1s ease;
     }
@@ -529,9 +503,8 @@ style.textContent = `
     }
 `;
 
-document.head.appendChild(style);
+document.head.appendChild(homepageStyle);
 
-// Cleanup on page unload
 window.addEventListener('beforeunload', () => {
     HomepageComponent.destroy();
 });

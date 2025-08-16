@@ -28,7 +28,6 @@ const NavigationComponent = {
     },
     
     bindEvents() {
-        // Mobile toggle
         if (this.elements.toggle) {
             this.elements.toggle.addEventListener('click', (e) => {
                 e.stopPropagation();
@@ -36,47 +35,37 @@ const NavigationComponent = {
             });
         }
         
-        // Close menu when clicking outside
         document.addEventListener('click', (e) => {
             if (this.isMenuOpen && !this.elements.navbar?.contains(e.target)) {
                 this.closeMobileMenu();
             }
         });
         
-        // Close menu on window resize
         window.addEventListener('resize', () => {
             if (window.innerWidth > 768) {
                 this.closeMobileMenu();
             }
         });
         
-        // Handle nav link clicks
         this.elements.navLinks.forEach(link => {
             link.addEventListener('click', (e) => {
-                // Close mobile menu on link click
                 if (this.isMenuOpen) {
                     this.closeMobileMenu();
                 }
                 
-                // Add active state
                 this.setActiveLink(link);
                 
-                // Handle external links
                 if (link.hasAttribute('target') && link.getAttribute('target') === '_blank') {
-                    // Let the browser handle external links naturally
                     return;
                 }
                 
-                // Handle internal navigation
                 const href = link.getAttribute('href');
                 if (href && !href.startsWith('#')) {
-                    // Add loading state for page transitions
                     this.showNavigationLoading();
                 }
             });
         });
         
-        // Scroll-based navbar styling
         let lastScrollY = window.scrollY;
         const throttledScroll = window.HyperAbyss.utils.throttle(() => {
             const currentScrollY = window.scrollY;
@@ -88,7 +77,6 @@ const NavigationComponent = {
                     this.elements.navbar.classList.remove('navbar-scrolled');
                 }
                 
-                // Hide/show navbar on scroll
                 if (currentScrollY > lastScrollY && currentScrollY > 200) {
                     this.elements.navbar.style.transform = 'translateY(-100%)';
                 } else {
@@ -101,7 +89,6 @@ const NavigationComponent = {
         
         window.addEventListener('scroll', throttledScroll);
         
-        // Keyboard navigation
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape' && this.isMenuOpen) {
                 this.closeMobileMenu();
@@ -125,16 +112,13 @@ const NavigationComponent = {
         this.elements.toggle.classList.add('active');
         this.elements.toggle.setAttribute('aria-expanded', 'true');
         
-        // Prevent body scroll
         document.body.style.overflow = 'hidden';
         
-        // Focus management
         const firstFocusable = this.elements.menu.querySelector('a, button');
         if (firstFocusable) {
             firstFocusable.focus();
         }
         
-        // Emit event
         window.HyperAbyss.utils.emit('navigation-menu-opened');
     },
     
@@ -146,20 +130,16 @@ const NavigationComponent = {
         this.elements.toggle.classList.remove('active');
         this.elements.toggle.setAttribute('aria-expanded', 'false');
         
-        // Restore body scroll
         document.body.style.overflow = '';
         
-        // Emit event
         window.HyperAbyss.utils.emit('navigation-menu-closed');
     },
     
     setActiveLink(activeLink) {
-        // Remove active class from all links
         this.elements.navLinks.forEach(link => {
             link.closest('.nav-item')?.classList.remove('nav-active');
         });
         
-        // Add active class to current link
         activeLink.closest('.nav-item')?.classList.add('nav-active');
     },
     
@@ -208,13 +188,9 @@ const NavigationComponent = {
             statusText = 'All servers offline';
         }
         
-        // Update status dot
         this.elements.statusDot.className = `status-dot ${statusClass}`;
-        
-        // Update status text
         this.elements.statusText.textContent = statusText;
         
-        // Emit status update event
         window.HyperAbyss.utils.emit('server-status-updated', {
             online: onlineServers,
             total: totalServers,
@@ -223,15 +199,12 @@ const NavigationComponent = {
     },
     
     startStatusUpdates() {
-        // Initial update
         this.updateStatus();
         
-        // Update every 30 seconds
         setInterval(() => {
             this.updateStatus();
         }, 30000);
         
-        // Update when page becomes visible
         document.addEventListener('visibilitychange', () => {
             if (!document.hidden) {
                 this.updateStatus();
@@ -239,7 +212,6 @@ const NavigationComponent = {
         });
     },
     
-    // Public methods for external use
     showStatus(message, type = 'info', duration = 3000) {
         const statusElement = this.elements.statusText;
         if (!statusElement) return;
@@ -247,11 +219,9 @@ const NavigationComponent = {
         const originalText = statusElement.textContent;
         const originalClass = this.elements.statusDot.className;
         
-        // Set temporary status
         statusElement.textContent = message;
         this.elements.statusDot.className = `status-dot status-${type}`;
         
-        // Restore original status after duration
         setTimeout(() => {
             statusElement.textContent = originalText;
             this.elements.statusDot.className = originalClass;
@@ -297,7 +267,6 @@ const NavigationComponent = {
             navList.appendChild(listItem);
         }
         
-        // Bind events for new item
         link.addEventListener('click', (e) => {
             if (this.isMenuOpen) {
                 this.closeMobileMenu();
@@ -307,7 +276,6 @@ const NavigationComponent = {
     }
 };
 
-// Global function for backward compatibility
 window.toggleMobileMenu = function() {
     NavigationComponent.toggleMobileMenu();
 };
@@ -316,12 +284,10 @@ window.updateNavbarStatus = function(onlineServers, totalServers) {
     NavigationComponent.setServerStatus(onlineServers, totalServers);
 };
 
-// Register component
 window.HyperAbyss.utils.registerComponent('navigation', NavigationComponent);
 
-// Add CSS for additional states
-const style = document.createElement('style');
-style.textContent = `
+const navigationStyle = document.createElement('style');
+navigationStyle.textContent = `
     .navbar.navbar-scrolled {
         background: rgba(26, 26, 46, 0.95);
         backdrop-filter: blur(20px);
@@ -360,4 +326,4 @@ style.textContent = `
     }
 `;
 
-document.head.appendChild(style);
+document.head.appendChild(navigationStyle);

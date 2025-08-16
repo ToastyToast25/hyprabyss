@@ -21,9 +21,16 @@ class Config
 
     public function __construct(string $envFile = '.env')
     {
-        $this->env = $this->loadEnvironment($envFile);
-        $this->servers = $this->loadServers();
-        $this->initializeDatabase();
+    // Handle both relative and absolute paths
+    if ($envFile === '.env') {
+        $envPath = dirname(__DIR__) . '/.env';
+    } else {
+        $envPath = $envFile;
+    }
+    
+    $this->env = $this->loadEnvironment($envPath);
+    $this->servers = $this->loadServers();
+    $this->initializeDatabase();
     }
 
     public static function getInstance(string $envFile = '.env'): self

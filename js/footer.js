@@ -30,7 +30,6 @@ const FooterComponent = {
     },
     
     bindEvents() {
-        // Newsletter form submission
         if (this.elements.newsletterForm) {
             this.elements.newsletterForm.addEventListener('submit', (e) => {
                 e.preventDefault();
@@ -38,13 +37,11 @@ const FooterComponent = {
             });
         }
         
-        // Social link tracking
         this.elements.socialLinks.forEach(link => {
             link.addEventListener('click', (e) => {
                 const platform = this.getSocialPlatform(link.href);
                 this.trackSocialClick(platform);
                 
-                // Add visual feedback
                 link.style.transform = 'scale(0.95)';
                 setTimeout(() => {
                     link.style.transform = '';
@@ -52,7 +49,6 @@ const FooterComponent = {
             });
         });
         
-        // Footer link hover effects
         this.elements.footerLinks.forEach(link => {
             link.addEventListener('mouseenter', () => {
                 link.style.transform = 'translateX(5px)';
@@ -63,7 +59,6 @@ const FooterComponent = {
             });
         });
         
-        // Copy server IP functionality
         const copyButtons = document.querySelectorAll('[data-copy]');
         copyButtons.forEach(button => {
             button.addEventListener('click', (e) => {
@@ -87,7 +82,6 @@ const FooterComponent = {
             return;
         }
         
-        // Show loading state
         this.setNewsletterLoading(true);
         this.showNewsletterStatus('Subscribing...', 'loading');
         
@@ -105,8 +99,6 @@ const FooterComponent = {
             if (response.ok && result.success) {
                 this.showNewsletterStatus('Successfully subscribed! Welcome to the community!', 'success');
                 this.elements.newsletterForm?.reset();
-                
-                // Track successful subscription
                 this.trackNewsletterSignup(email);
             } else {
                 throw new Error(result.message || 'Subscription failed');
@@ -138,7 +130,6 @@ const FooterComponent = {
         this.elements.newsletterStatus.textContent = message;
         this.elements.newsletterStatus.className = `newsletter-status newsletter-${type}`;
         
-        // Clear status after delay (except for success messages)
         if (type !== 'success') {
             setTimeout(() => {
                 this.elements.newsletterStatus.textContent = '';
@@ -162,7 +153,6 @@ const FooterComponent = {
             }
         } catch (error) {
             console.warn('Failed to update footer stats:', error);
-            // Keep current values or show placeholder
         }
     },
     
@@ -175,7 +165,6 @@ const FooterComponent = {
             window.HyperAbyss.utils.animateNumber(this.elements.serversOnlineFooter, serversOnline);
         }
         
-        // Emit stats update event
         window.HyperAbyss.utils.emit('footer-stats-updated', {
             totalPlayers,
             serversOnline
@@ -183,15 +172,12 @@ const FooterComponent = {
     },
     
     startStatsUpdates() {
-        // Initial update
         this.updateStats();
         
-        // Update every 30 seconds
         setInterval(() => {
             this.updateStats();
         }, 30000);
         
-        // Listen for external stats updates
         window.HyperAbyss.utils.on('server-stats-updated', (e) => {
             const { totalPlayers, serversOnline } = e.detail;
             this.setStats(totalPlayers, serversOnline);
@@ -211,7 +197,6 @@ const FooterComponent = {
     trackSocialClick(platform) {
         window.HyperAbyss.utils.emit('social-click', { platform });
         
-        // Analytics tracking (if available)
         if (typeof gtag !== 'undefined') {
             gtag('event', 'click', {
                 event_category: 'social',
@@ -223,7 +208,6 @@ const FooterComponent = {
     trackNewsletterSignup(email) {
         window.HyperAbyss.utils.emit('newsletter-signup', { email });
         
-        // Analytics tracking (if available)
         if (typeof gtag !== 'undefined') {
             gtag('event', 'newsletter_signup', {
                 event_category: 'engagement',
@@ -237,7 +221,6 @@ const FooterComponent = {
             const success = await window.HyperAbyss.utils.copyToClipboard(text);
             
             if (success) {
-                // Show success feedback
                 const originalText = button.innerHTML;
                 button.innerHTML = '<i class="fas fa-check"></i> Copied!';
                 button.style.background = 'var(--status-online)';
@@ -252,7 +235,6 @@ const FooterComponent = {
         } catch (error) {
             console.error('Copy to clipboard failed:', error);
             
-            // Show error feedback
             const originalText = button.innerHTML;
             button.innerHTML = '<i class="fas fa-times"></i> Failed';
             button.style.background = 'var(--status-offline)';
@@ -264,7 +246,6 @@ const FooterComponent = {
         }
     },
     
-    // Public methods for external use
     updatePlayerCount(count) {
         if (this.elements.totalPlayersFooter) {
             window.HyperAbyss.utils.animateNumber(this.elements.totalPlayersFooter, count);
@@ -288,11 +269,9 @@ const FooterComponent = {
             </button>
         `;
         
-        // Add to footer
         if (this.elements.footer) {
             this.elements.footer.appendChild(notification);
             
-            // Auto-remove after duration
             setTimeout(() => {
                 if (notification.parentElement) {
                     notification.remove();
@@ -302,17 +281,31 @@ const FooterComponent = {
     }
 };
 
-// Global function for backward compatibility
 window.updateFooterStats = function(totalPlayers, serversOnline) {
     FooterComponent.setStats(totalPlayers, serversOnline);
 };
 
-// Register component
 window.HyperAbyss.utils.registerComponent('footer', FooterComponent);
 
-// Add CSS for notifications
 const style = document.createElement('style');
 style.textContent = `
+    .footer-notification {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background: var(--space-dark);
+        border: 1px solid var(--glass-border);
+        border-radius: var(--radius-lg);
+        padding: var(--spacing-md) var(--spacing-lg);
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-md);
+        max-width: 400px;
+        z-index: 10000;
+        animation: slideInRight 0.3s ease;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+    }
+    
     .footer-notification-success {
         border-color: var(--status-online);
         background: rgba(76, 175, 80, 0.1);
@@ -389,21 +382,4 @@ style.textContent = `
     }
 `;
 
-document.head.appendChild(style); {
-        position: fixed;
-        bottom: 20px;
-        right: 20px;
-        background: var(--space-dark);
-        border: 1px solid var(--glass-border);
-        border-radius: var(--radius-lg);
-        padding: var(--spacing-md) var(--spacing-lg);
-        display: flex;
-        align-items: center;
-        gap: var(--spacing-md);
-        max-width: 400px;
-        z-index: 10000;
-        animation: slideInRight 0.3s ease;
-        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
-    }
-    
-    .footer-notification
+document.head.appendChild(style);

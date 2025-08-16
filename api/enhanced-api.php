@@ -1,20 +1,17 @@
 <?php
-
 declare(strict_types=1);
-
-/**
- * Enhanced API - Unified API endpoint for HyperAbyss ARK Cluster
- * PHP 8.4 compatible with strict typing and modern features
- */
 
 namespace HyperAbyss\API;
 
+use HyperAbyss\Config;
+use HyperAbyss\EnhancedArkRcon;
 use Exception;
 use PDO;
 use PDOException;
 
-// Error handling
-ini_set('display_errors', '0');
+
+
+ini_set('display_errors', '1');
 error_reporting(E_ALL);
 
 // CORS and security headers
@@ -54,7 +51,7 @@ class APIResponse
         public readonly ResponseStatus $status,
         public readonly array $data = [],
         public readonly ?string $error = null,
-        public readonly int $responseTime = 0
+        public readonly float $responseTime = 0
     ) {}
 
     public function toArray(): array
@@ -78,7 +75,7 @@ class EnhancedAPI
     public function __construct()
     {
         $this->startTime = microtime(true);
-        $this->config = new Config();
+        $this->config = new Config(__DIR__ . '/../.env');
         $this->pdo = $this->initializeDatabase();
     }
 
@@ -127,14 +124,19 @@ class EnhancedAPI
 
     private function getServers(): APIResponse
     {
-        $servers = $this->config->getServers();
-        $serverData = [];
-        $totalPlayers = 0;
-        $onlineServers = 0;
+		// Get PDO connection - adjust method name as needed
+		$pdo = $this->config->getPDO(); // or ->getConnection() or ->db
+		$result = $pdo->query("SELECT COUNT(*) FROM servers");
+		error_log("Debug server count: " . $result->fetchColumn());
+		   
+		   $servers = $this->config->getServers();
+		   $serverData = [];
+		   $totalPlayers = 0;
+		   $onlineServers = 0;
 
         foreach ($servers as $serverKey => $serverConfig) {
             try {
-                $rcon = new \EnhancedArkRcon(
+                $rcon = new EnhancedArkRcon(
                     $serverConfig['ip'],
                     (int)$serverConfig['rcon_port'],
                     $serverConfig['rcon_password'],
@@ -152,9 +154,9 @@ class EnhancedAPI
                     'port' => (int)$serverConfig['port'],
                     'status' => ServerStatus::ONLINE->value,
                     'players' => [
-                        'online' => $playerData['count'],
+                        'online' => $playerData->count,
                         'max' => $maxPlayers,
-                        'list' => $playerData['players']
+                        'list' => $playerData->players
                     ],
                     'server_info' => [
                         'map' => $serverConfig['map'],
@@ -164,11 +166,11 @@ class EnhancedAPI
                     'last_updated' => date('c')
                 ];
 
-                $totalPlayers += $playerData['count'];
+                $totalPlayers += $playerData->count;
                 $onlineServers++;
 
                 // Update database if available
-                $this->updateServerStatus($serverKey, $playerData['count'], $ping);
+                $this->updateServerStatus($serverKey, $playerData->count, $ping);
 
             } catch (Exception $e) {
                 $serverData[$serverKey] = [

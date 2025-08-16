@@ -28,22 +28,130 @@ utils.debounce = function(func, wait) {
         const later = () => {
             clearTimeout(timeout);
             func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+};
+
+utils.throttle = function(func, limit) {
+    let inThrottle;
+    return function() {
+        const args = arguments;
+        const context = this;
+        if (!inThrottle) {
+            func.apply(context, args);
+            inThrottle = true;
+            setTimeout(() => inThrottle = false, limit);
         }
-    },
+    };
+};
+
+utils.formatNumber = function(num) {
+    if (num >= 1000000) {
+        return (num / 1000000).toFixed(1) + 'M';
+    }
+    if (num >= 1000) {
+        return (num / 1000).toFixed(1) + 'K';
+    }
+    return num.toString();
+};
+
+utils.formatUptime = function(seconds) {
+    if (seconds < 60) return `${seconds}s`;
+    if (seconds < 3600) return `${Math.floor(seconds / 60)}m`;
+    if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ${Math.floor((seconds % 3600) / 60)}m`;
+    return `${Math.floor(seconds / 86400)}d ${Math.floor((seconds % 86400) / 3600)}h`;
+};
+
+utils.animateNumber = function(element, targetValue, duration = 1000) {
+    const startValue = parseInt(element.textContent.replace(/[^\d]/g, '')) || 0;
+    const increment = (targetValue - startValue) / (duration / 16);
+    let current = startValue;
     
-    close: function(modalId) {
-        const modal = document.getElementById(modalId);
-        if (modal) {
-            modal.classList.remove('active');
-            document.body.style.overflow = '';
+    const timer = setInterval(() => {
+        current += increment;
+        if ((increment > 0 && current >= targetValue) || (increment < 0 && current <= targetValue)) {
+            element.textContent = targetValue.toLocaleString();
+            clearInterval(timer);
+        } else {
+            element.textContent = Math.round(current).toLocaleString();
         }
-    },
+    }, 16);
+};
+
+utils.copyToClipboard = async function(text) {
+    try {
+        await navigator.clipboard.writeText(text);
+        return true;
+    } catch (err) {
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        textArea.style.position = 'fixed';
+        textArea.style.opacity = '0';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        
+        try {
+            document.execCommand('copy');
+            return true;
+        } catch (err) {
+            return false;
+        } finally {
+            document.body.removeChild(textArea);
+        }
+    }
+};
+
+utils.sanitizeHtml = function(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+};
+
+/**
+ * API Helper Functions
+ */
+utils.apiRequest = async function(endpoint, options = {}) {
+    const cacheKey = `${endpoint}-${JSON.stringify(options)}`;
+    const cached = cache.get(cacheKey);
     
-    closeAll: function() {
-        document.querySelectorAll('.modal-overlay.active').forEach(modal => {
-            modal.classList.remove('active');
+    if (cached && Date.now() - cached.timestamp < 300000) {
+        return cached.data;
+    }
+    
+    try {
+        const url = endpoint.startsWith('http') ? endpoint : `${config.apiUrl}?endpoint=${endpoint}`;
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            },
+            ...options
         });
-        document.body.style.overflow = '';
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        
+        if (data.status === 'error') {
+            throw new Error(data.error || 'API request failed');
+        }
+        
+        cache.set(cacheKey, {
+            data,
+            timestamp: Date.now()
+        });
+        
+        return data;
+    } catch (error) {
+        console.error('API request failed:', error);
+        events.dispatchEvent(new CustomEvent('api-error', { detail: error }));
+        throw error;
     }
 };
 
@@ -131,12 +239,44 @@ utils.storage = {
 };
 
 /**
+ * Modal System
+ */
+utils.modal = {
+    open: function(modalId) {
+        const modal = document.getElementById(modalId);
+        if (modal) {
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+            
+            const focusableElements = modal.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+            if (focusableElements.length > 0) {
+                focusableElements[0].focus();
+            }
+        }
+    },
+    
+    close: function(modalId) {
+        const modal = document.getElementById(modalId);
+        if (modal) {
+            modal.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+    },
+    
+    closeAll: function() {
+        document.querySelectorAll('.modal-overlay.active').forEach(modal => {
+            modal.classList.remove('active');
+        });
+        document.body.style.overflow = '';
+    }
+};
+
+/**
  * Component Registration System
  */
 utils.registerComponent = function(name, component) {
     components[name] = component;
     
-    // Auto-initialize if DOM is ready
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', () => {
             component.init?.();
@@ -162,243 +302,6 @@ utils.off = function(event, callback) {
 };
 
 /**
- * Initialize Base Functionality
- */
-function initializeBase() {
-    utils.performance.mark('base-init-start');
-    
-    // Set initial theme
-    const savedTheme = utils.theme.get();
-    document.documentElement.setAttribute('data-theme', savedTheme);
-    
-    // Create particles
-    utils.createParticles();
-    
-    // Initialize intersection observer
-    utils.observeElements();
-    
-    // Global error handler
-    window.addEventListener('error', (e) => {
-        console.error('Global error:', e.error);
-        utils.showError('An unexpected error occurred. Please refresh the page.');
-    });
-    
-    // Unhandled promise rejection handler
-    window.addEventListener('unhandledrejection', (e) => {
-        console.error('Unhandled promise rejection:', e.reason);
-        utils.showError('A network error occurred. Please check your connection.');
-    });
-    
-    // API error handler
-    utils.on('api-error', (e) => {
-        const error = e.detail;
-        if (error.message.includes('fetch')) {
-            utils.showError('Connection error. Please check your internet connection.');
-        } else {
-            utils.showError('Server error. Please try again later.');
-        }
-    });
-    
-    // Handle window resize for particles
-    const debouncedResize = utils.debounce(() => {
-        utils.createParticles();
-    }, config.debounceDelay);
-    
-    window.addEventListener('resize', debouncedResize);
-    
-    // Close modals on escape key
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') {
-            utils.modal.closeAll();
-        }
-    });
-    
-    // Close modals on backdrop click
-    document.addEventListener('click', (e) => {
-        if (e.target.classList.contains('modal-overlay')) {
-            utils.modal.close(e.target.id);
-        }
-    });
-    
-    // Smooth scrolling for anchor links
-    document.addEventListener('click', (e) => {
-        const link = e.target.closest('a[href^="#"]');
-        if (link) {
-            e.preventDefault();
-            const target = document.querySelector(link.getAttribute('href'));
-            if (target) {
-                target.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'start'
-                });
-            }
-        }
-    });
-    
-    // Add loading states to buttons
-    document.addEventListener('click', (e) => {
-        const button = e.target.closest('button[data-loading]');
-        if (button && !button.disabled) {
-            button.classList.add('loading');
-            button.disabled = true;
-            
-            // Auto-remove loading state after 5 seconds
-            setTimeout(() => {
-                button.classList.remove('loading');
-                button.disabled = false;
-            }, 5000);
-        }
-    });
-    
-    // Performance monitoring
-    utils.performance.mark('base-init-end');
-    utils.performance.measure('base-initialization', 'base-init-start', 'base-init-end');
-    
-    // Emit ready event
-    utils.emit('base-ready');
-    
-    console.log('HyperAbyss base system initialized');
-}
-
-// Initialize when DOM is ready
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initializeBase);
-} else {
-    initializeBase();
-}
-
-// Export for global access
-window.HyperAbyss.utils = utils;;
-        clearTimeout(timeout);
-        timeout = setTimeout(later, wait);
-    };
-};
-
-utils.throttle = function(func, limit) {
-    let inThrottle;
-    return function() {
-        const args = arguments;
-        const context = this;
-        if (!inThrottle) {
-            func.apply(context, args);
-            inThrottle = true;
-            setTimeout(() => inThrottle = false, limit);
-        }
-    };
-};
-
-utils.formatNumber = function(num) {
-    if (num >= 1000000) {
-        return (num / 1000000).toFixed(1) + 'M';
-    }
-    if (num >= 1000) {
-        return (num / 1000).toFixed(1) + 'K';
-    }
-    return num.toString();
-};
-
-utils.formatUptime = function(seconds) {
-    if (seconds < 60) return `${seconds}s`;
-    if (seconds < 3600) return `${Math.floor(seconds / 60)}m`;
-    if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ${Math.floor((seconds % 3600) / 60)}m`;
-    return `${Math.floor(seconds / 86400)}d ${Math.floor((seconds % 86400) / 3600)}h`;
-};
-
-utils.animateNumber = function(element, targetValue, duration = 1000) {
-    const startValue = parseInt(element.textContent.replace(/[^\d]/g, '')) || 0;
-    const increment = (targetValue - startValue) / (duration / 16);
-    let current = startValue;
-    
-    const timer = setInterval(() => {
-        current += increment;
-        if ((increment > 0 && current >= targetValue) || (increment < 0 && current <= targetValue)) {
-            element.textContent = targetValue.toLocaleString();
-            clearInterval(timer);
-        } else {
-            element.textContent = Math.round(current).toLocaleString();
-        }
-    }, 16);
-};
-
-utils.copyToClipboard = async function(text) {
-    try {
-        await navigator.clipboard.writeText(text);
-        return true;
-    } catch (err) {
-        // Fallback for older browsers
-        const textArea = document.createElement('textarea');
-        textArea.value = text;
-        textArea.style.position = 'fixed';
-        textArea.style.opacity = '0';
-        document.body.appendChild(textArea);
-        textArea.focus();
-        textArea.select();
-        
-        try {
-            document.execCommand('copy');
-            return true;
-        } catch (err) {
-            return false;
-        } finally {
-            document.body.removeChild(textArea);
-        }
-    }
-};
-
-utils.sanitizeHtml = function(str) {
-    const div = document.createElement('div');
-    div.textContent = str;
-    return div.innerHTML;
-};
-
-/**
- * API Helper Functions
- */
-utils.apiRequest = async function(endpoint, options = {}) {
-    const cacheKey = `${endpoint}-${JSON.stringify(options)}`;
-    const cached = cache.get(cacheKey);
-    
-    // Return cached data if still valid (5 minutes)
-    if (cached && Date.now() - cached.timestamp < 300000) {
-        return cached.data;
-    }
-    
-    try {
-        const url = endpoint.startsWith('http') ? endpoint : `${config.apiUrl}?endpoint=${endpoint}`;
-        const response = await fetch(url, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                ...options.headers
-            },
-            ...options
-        });
-        
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-        
-        const data = await response.json();
-        
-        if (data.status === 'error') {
-            throw new Error(data.error || 'API request failed');
-        }
-        
-        // Cache successful responses
-        cache.set(cacheKey, {
-            data,
-            timestamp: Date.now()
-        });
-        
-        return data;
-    } catch (error) {
-        console.error('API request failed:', error);
-        events.dispatchEvent(new CustomEvent('api-error', { detail: error }));
-        throw error;
-    }
-};
-
-/**
  * Intersection Observer for Animations
  */
 utils.observeElements = function() {
@@ -407,7 +310,6 @@ utils.observeElements = function() {
             if (entry.isIntersecting) {
                 entry.target.classList.add('in-view');
                 
-                // Trigger number animations
                 const numbers = entry.target.querySelectorAll('[data-animate-number]');
                 numbers.forEach(el => {
                     const target = parseInt(el.dataset.animateNumber);
@@ -436,7 +338,6 @@ utils.createParticles = function() {
     
     const particleCount = window.innerWidth < 768 ? 20 : 50;
     
-    // Clear existing particles
     particlesContainer.innerHTML = '';
     
     for (let i = 0; i < particleCount; i++) {
@@ -467,7 +368,6 @@ utils.showError = function(message, duration = 5000) {
     
     errorContainer.appendChild(errorDiv);
     
-    // Auto-remove after duration
     setTimeout(() => {
         if (errorDiv.parentElement) {
             errorDiv.remove();
@@ -490,17 +390,92 @@ utils.showError = function(message, duration = 5000) {
 };
 
 /**
- * Modal System
+ * Initialize Base Functionality
  */
-utils.modal = {
-    open: function(modalId) {
-        const modal = document.getElementById(modalId);
-        if (modal) {
-            modal.classList.add('active');
-            document.body.style.overflow = 'hidden';
-            
-            // Focus trap
-            const focusableElements = modal.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
-            if (focusableElements.length > 0) {
-                focusableElements[0].focus();
+function initializeBase() {
+    utils.performance.mark('base-init-start');
+    
+    const savedTheme = utils.theme.get();
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    
+    utils.createParticles();
+    utils.observeElements();
+    
+    window.addEventListener('error', (e) => {
+        console.error('Global error:', e.error);
+        utils.showError('An unexpected error occurred. Please refresh the page.');
+    });
+    
+    window.addEventListener('unhandledrejection', (e) => {
+        console.error('Unhandled promise rejection:', e.reason);
+        utils.showError('A network error occurred. Please check your connection.');
+    });
+    
+    utils.on('api-error', (e) => {
+        const error = e.detail;
+        if (error.message.includes('fetch')) {
+            utils.showError('Connection error. Please check your internet connection.');
+        } else {
+            utils.showError('Server error. Please try again later.');
+        }
+    });
+    
+    const debouncedResize = utils.debounce(() => {
+        utils.createParticles();
+    }, config.debounceDelay);
+    
+    window.addEventListener('resize', debouncedResize);
+    
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            utils.modal.closeAll();
+        }
+    });
+    
+    document.addEventListener('click', (e) => {
+        if (e.target.classList.contains('modal-overlay')) {
+            utils.modal.close(e.target.id);
+        }
+    });
+    
+    document.addEventListener('click', (e) => {
+        const link = e.target.closest('a[href^="#"]');
+        if (link) {
+            e.preventDefault();
+            const target = document.querySelector(link.getAttribute('href'));
+            if (target) {
+                target.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
             }
+        }
+    });
+    
+    document.addEventListener('click', (e) => {
+        const button = e.target.closest('button[data-loading]');
+        if (button && !button.disabled) {
+            button.classList.add('loading');
+            button.disabled = true;
+            
+            setTimeout(() => {
+                button.classList.remove('loading');
+                button.disabled = false;
+            }, 5000);
+        }
+    });
+    
+    utils.performance.mark('base-init-end');
+    utils.performance.measure('base-initialization', 'base-init-start', 'base-init-end');
+    
+    utils.emit('base-ready');
+    
+    console.log('HyperAbyss base system initialized');
+}
+
+// Initialize when DOM is ready
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeBase);
+} else {
+    initializeBase();
+}

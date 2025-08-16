@@ -1,0 +1,13 @@
+{
+    "name": "hyperabyss/ark-cluster",
+    "description": "HyperAbyss ARK Cluster Management System",
+    "type": "project",
+    "require": {
+        "php": "^8.2"
+    },
+    "autoload": {
+        "psr-4": {
+            "HyperAbyss\\": "src/"
+        }
+    }
+}

@@ -103,10 +103,7 @@ function renderLayout(LayoutConfig $config, callable $contentCallback): string
     
     <!-- Header -->
     <header role="banner">
-        <?php
-        require_once __DIR__ . '/../components/navigation.php';
-        echo renderNavigation($config->currentPage);
-        ?>
+        <?php include __DIR__ . '/../components/navigation.php'; ?>
     </header>
     
     <!-- Main content -->
@@ -116,10 +113,7 @@ function renderLayout(LayoutConfig $config, callable $contentCallback): string
     
     <!-- Footer -->
     <footer role="contentinfo">
-        <?php
-        require_once __DIR__ . '/../components/footer.php';
-        echo renderFooter();
-        ?>
+        <?php include __DIR__ . '/../components/footer.php'; ?>
     </footer>
     
     <!-- Core JavaScript -->
